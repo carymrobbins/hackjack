@@ -5,8 +5,8 @@ import Deck
 import Cards
 
 
-newGame :: IO (Deck, TheDealer, ThePlayer)
-newGame = 
+--newGame :: IO (Deck, TheDealer, ThePlayer)
+--newGame = 
 
 showTable :: TheDealer -> ThePlayer -> TurnIsComplete -> String
 showTable dealer player turnIsComplete =
