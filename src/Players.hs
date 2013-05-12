@@ -1,5 +1,7 @@
 module Players where
 
+import Control.Applicative ((<*>), pure)
+
 import Cards
 
 type Cash = Int
@@ -17,11 +19,12 @@ class CardPlayer a where
     playerPoints = getPoints . getHand
     
     hasBlackjack :: a -> Bool
-    hasBlackjack player = (getPoints . getHand) player == 21 &&
-                          (length . getCards . getHand) player == 2
+    hasBlackjack = and . ((<*>) [ (==21) . playerPoints
+                                , (==2) . length . getCards . getHand
+                                ]) . pure
     
     busts :: a -> Bool
-    busts player = (getPoints . getHand) player > 21
+    busts = (>21) . playerPoints
 
 instance CardPlayer Dealer where
     getHand (Dealer hand) = hand
