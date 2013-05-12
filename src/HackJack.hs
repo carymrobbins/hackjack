@@ -4,8 +4,7 @@ import Data.Char (toLower)
 import System.Console.ANSI (clearScreen)
 
 main :: IO ()
-main = do
-    intro
+main = intro
     
 intro :: IO ()
 intro = do
