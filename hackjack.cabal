@@ -11,5 +11,5 @@ executable hackjack
                    ansi-terminal,
                    random-shuffle
   ghc-options:     -Wall
-  main-is:         HackJack.hs
+  main-is:         Hackjack.hs
 

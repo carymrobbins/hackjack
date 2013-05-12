@@ -50,9 +50,10 @@ instance HasPoints Card where
 instance HasPoints Hand where
     getPoints Hand { getCards = [] } = 0
     
-    getPoints hand = if base > 21 && numAces > 0
-                     then maximum $ filter (<=21) possibleScores
-                     else base
+    getPoints hand =
+        if base > 21 && numAces > 0
+        then maximum $ filter (<=21) possibleScores
+        else base
       where
         base = sum $ map getPoints $ getCards hand
         numAces = length $ filter ((Ace==) . rank) $ getCards hand

@@ -1,4 +1,4 @@
-module HackJack (main) where
+module Hackjack (main) where
 
 import Data.Char (toLower)
 import System.Console.ANSI (clearScreen)
