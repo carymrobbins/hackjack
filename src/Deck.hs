@@ -11,7 +11,7 @@ numberOfDecks :: Int
 numberOfDecks = 6
 
 baseDeck :: Deck
-baseDeck = concat $ take numberOfDecks $ repeat allCards
+baseDeck = concat . take numberOfDecks $ repeat allCards
 
 newDeck :: IO (Deck)
 newDeck = shuffleM baseDeck
