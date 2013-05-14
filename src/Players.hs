@@ -8,6 +8,9 @@ type TurnIsComplete = Bool
 data Dealer = Dealer Hand
 data Player = Player Hand Cash
 
+getCash :: Player -> Cash
+getCash (Player _ cash) = cash
+
 class CardPlayer a where
     getHand :: a -> Hand
     

@@ -13,7 +13,7 @@ import Cards
 --newGame = 
 
 showTable dealer player turnIsComplete =
-    "Cash: $" ++ getCash player ++ "\n\
+    "Cash: $" ++ (show . getCash) player ++ "\n\
     \\n\
     \Your hand:      " ++ showHand player ++ "\
     \Dealer's hand:  " ++ showHand dealer ++ "\n\
