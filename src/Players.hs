@@ -5,28 +5,30 @@ import Cards
 type Cash = Int
 type TurnIsComplete = Bool
 
-data CardPlayer = Dealer Hand | Player Hand Cash
+data Dealer = Dealer Hand
+data Player = Player Hand Cash
 
-instance HasPoints CardPlayer where
-    getPoints = getPoints . getHand
+class CardPlayer a where
+    getHand :: a -> Hand
+    
+    viewHand :: TurnIsComplete -> a -> Hand
+    
+    playerPoints :: a -> Points
+    playerPoints = getPoints . getHand
+    
+    hasBlackjack :: a -> Bool
+    hasBlackjack player = (getPoints . getHand) player == 21 &&
+                          (length . getCards . getHand) player == 2
+    busts :: a -> Bool
+    busts = (>21) . playerPoints
 
-getCash :: CardPlayer -> Maybe Cash
-getCash (Dealer _) = Nothing
-getCash (Player _ cash) = Just cash
+instance CardPlayer Dealer where
+    getHand (Dealer hand) = hand
+    
+    viewHand False = Hand . tail . getCards . getHand
+    viewHand True = getHand
 
-getHand :: CardPlayer -> Hand
-getHand (Dealer hand) = hand
-getHand (Player hand _) = hand
-
-viewHand :: CardPlayer -> TurnIsComplete -> Hand
-viewHand (Dealer hand) False = Hand . tail $ getCards hand
-viewHand (Dealer hand) True = hand
-viewHand (Player hand _) _ = hand
-
-hasBlackjack :: CardPlayer -> Bool
-hasBlackjack player = (getPoints . getHand) player == 21 &&
-                      (length . getCards . getHand) player == 2
-
-busts :: CardPlayer -> Bool
-busts player = (getPoints . getHand) player > 21
-
+instance CardPlayer Player where
+    getHand (Player hand _) = hand
+    
+    viewHand _ = getHand

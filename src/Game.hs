@@ -5,10 +5,13 @@ import Deck
 import Cards
 
 
+
+--newtype GameSate s a = GameState { runGameState :: s -> (a, s) }
+
+
 --newGame :: IO (Deck, TheDealer, ThePlayer)
 --newGame = 
 
-showTable :: TheDealer -> ThePlayer -> TurnIsComplete -> String
 showTable dealer player turnIsComplete =
     "Cash: $" ++ getCash player ++ "\n\
     \\n\

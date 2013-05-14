@@ -2,6 +2,7 @@ module Cards where
 
 import Control.Applicative ((<$>), (<*>))
 
+type Points = Int
 type Cards = [Card]
 
 newtype Hand = Hand { getCards :: Cards }
@@ -33,7 +34,7 @@ allCards :: Cards
 allCards = Card <$> allRanks <*> allSuits
 
 class HasPoints a where
-    getPoints :: a -> Int
+    getPoints :: a -> Points
 
 instance HasPoints Card where
     getPoints (Card Ace _) = 11
