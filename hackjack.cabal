@@ -6,10 +6,9 @@ author:         crobbins
 
 executable hackjack
   hs-source-dirs:  src
-  build-depends:   
-                   base >= 4,
-                   ansi-terminal,
-                   random-shuffle
+  build-depends:   base >= 4,
+                   random-shuffle,
+                   mtl
   ghc-options:     -Wall
   main-is:         Hackjack.hs
 
