@@ -11,4 +11,7 @@ executable hackjack
                    mtl
   ghc-options:     -Wall
   main-is:         Hackjack.hs
+  extensions:      FlexibleInstances
+                   UndecidableInstances
+                   OverlappingInstances
 

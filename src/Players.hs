@@ -1,6 +1,10 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverlappingInstances #-}
+
 module Players where
 
-import Cards (Card, Hand(..), getPoints)
+import Cards (Card, Hand(..), HasPoints, getPoints)
 
 type Cash = Int
 type TurnIsComplete = Bool
@@ -15,7 +19,10 @@ newPlayer :: Player
 newPlayer = Player (Hand []) 0
 
 getCash :: Player -> Cash
-getCash (Player _ cash) = cash
+getCash (Player _ cash) = cash 
+
+instance (CardPlayer a) => HasPoints a where
+    getPoints = getPoints . getHand 
 
 class CardPlayer a where
     getHand :: a -> Hand
@@ -25,10 +32,13 @@ class CardPlayer a where
     grabCard :: a -> Card -> a
     
     hasBlackjack :: a -> Bool
-    hasBlackjack player = (getPoints . getHand) player == 21 &&
-                          (length . getCards . getHand) player == 2
+    hasBlackjack player = getPoints player == 21 &&
+                          numCards player == 2
+      where
+        numCards = length . getCards . getHand 
+
     busts :: a -> Bool
-    busts = (>21) . getPoints . getHand
+    busts = (>21) . getPoints
 
 instance CardPlayer Dealer where
     getHand (Dealer hand) = hand
