@@ -38,15 +38,7 @@ class HasPoints a where
 
 instance HasPoints Card where
     getPoints (Card Ace _) = 11
-    getPoints (Card Two _) = 2
-    getPoints (Card Three _) = 3
-    getPoints (Card Four _) = 4
-    getPoints (Card Five _) = 5
-    getPoints (Card Six _) = 6
-    getPoints (Card Seven _) = 7
-    getPoints (Card Eight _) = 8
-    getPoints (Card Nine _) = 9
-    getPoints _ = 10
+    getPoints (Card rank _) = min (fromEnum rank + 2) 10
 
 instance HasPoints Hand where
     getPoints Hand { getCards = [] } = 0
