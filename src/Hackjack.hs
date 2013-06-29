@@ -17,6 +17,3 @@ intro = do
     _ <- getLine
     return ()
 
-round :: IO ()
-round = do
-    
