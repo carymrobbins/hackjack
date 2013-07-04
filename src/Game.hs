@@ -21,11 +21,20 @@ newGameData = do
                     , dealer=newDealer
                     , player=newPlayer }
 
-drawCard :: GameState Card
-drawCard = State $ \gameData -> let (c:cs) = deck gameData
-                                in (c, GameData { deck=cs
-                                                , dealer=dealer gameData
-                                                , player=player gameData })
+drawCard :: CardPlayer b => (GameData -> b) -> GameState ()
+drawCard cardPlayer =
+    State $ \gameData -> let (card:cards) = deck gameData
+                             thePlayer = let p = player gameData
+                                         in if isPlayer $ cardPlayer gameData 
+                                            then grabCard p card
+                                            else p
+                             theDealer = let d = dealer gameData
+                                         in if isDealer $ cardPlayer gameData
+                                            then grabCard d card
+                                            else d
+                         in ((), GameData { deck=cards
+                                          , dealer=theDealer
+                                          , player=thePlayer })
 
 showRules :: InputString -> GoodOrBad OutputString
 showRules input = processResponse

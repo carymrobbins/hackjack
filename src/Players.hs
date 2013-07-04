@@ -40,13 +40,20 @@ class CardPlayer a where
     busts :: a -> Bool
     busts = (>21) . getPoints
 
+    isDealer :: a -> Bool
+
+    isPlayer :: a -> Bool
+    isPlayer = not . isDealer
+
 instance CardPlayer Dealer where
     getHand (Dealer hand) = hand
     
     viewHand False = Hand . tail . getCards . getHand
-    viewHand True = getHand
+    viewHand True = getHand 
     
     grabCard (Dealer (Hand hand)) card = Dealer $ Hand (card:hand)
+
+    isDealer _ = True
 
 instance CardPlayer Player where
     getHand (Player hand _) = hand
@@ -54,3 +61,6 @@ instance CardPlayer Player where
     viewHand _ = getHand
     
     grabCard (Player (Hand hand) cash) card = Player (Hand (card:hand)) cash
+
+    isDealer _ = False
+
