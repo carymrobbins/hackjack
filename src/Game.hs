@@ -1,40 +1,61 @@
 module Game where
 
 import Data.Char
+import Control.Monad.Trans.State
 
 import Cards
 import Deck
 import Players
 import Helpers
 
-data GameData = GameData { deck :: Deck
-                         , dealer :: Dealer
-                         , player :: Player }
-                deriving (Show)
+data Game = Game { deck :: Deck
+                 , dealer :: Dealer
+                 , player :: Player }
+                 deriving (Show)
 
-type GameState a = State GameData a
+setDeck :: Game -> Deck -> Game
+setDeck game deck =
+    Game { deck = deck
+         , dealer = dealer game
+         , player = player game }
 
-newGameData :: IO GameData
-newGameData = do
+setDealer :: Game -> Dealer -> Game
+setDealer game dealer =
+    Game { deck = deck game
+         , dealer = dealer
+         , player = player game }
+
+setPlayer :: Game -> Player -> Game
+setPlayer game player =
+    Game { deck = deck game
+         , dealer = dealer game
+         , player = player }
+
+newGame :: IO Game
+newGame = do
     d <- newDeck
-    return GameData { deck=d
-                    , dealer=newDealer
-                    , player=newPlayer }
+    return Game { deck=d
+                , dealer=newDealer
+                , player=newPlayer }
 
-drawCard :: CardPlayer b => (GameData -> b) -> GameState ()
+type GameState = State Game
+
+drawCard :: (CardPlayer a) => (Game -> a) -> GameState ()
 drawCard cardPlayer =
-    State $ \gameData -> let (card:cards) = deck gameData
-                             thePlayer = let p = player gameData
-                                         in if isPlayer $ cardPlayer gameData 
-                                            then grabCard p card
-                                            else p
-                             theDealer = let d = dealer gameData
-                                         in if isDealer $ cardPlayer gameData
-                                            then grabCard d card
-                                            else d
-                         in ((), GameData { deck=cards
-                                          , dealer=theDealer
-                                          , player=thePlayer })
+    state $ \game ->
+        let (card:cards) = deck game
+            set setPerson person = setPerson game $ grabCard (person game) card
+            updatedGame = if isPlayer $ cardPlayer game
+                          then set setPlayer player
+                          else set setDealer dealer
+         in ((), updatedGame)
+
+roundInit :: GameState ()
+roundInit = do
+    drawCard player
+    drawCard dealer
+    drawCard player
+    drawCard dealer
 
 showRules :: InputString -> GoodOrBad OutputString
 showRules input = processResponse
@@ -73,3 +94,4 @@ showTable d p t =
     \\n\
     \You have " ++ (show . getPoints . viewHand t) p ++ ",\n\
     \dealer is showing " ++ (show . getPoints . viewHand t) d ++ "\n"
+
