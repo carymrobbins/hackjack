@@ -13,20 +13,20 @@ data Game = Game { deck :: Deck
                  , player :: Player }
                  deriving (Show)
 
-setDeck :: Game -> Deck -> Game
-setDeck game deck =
+setDeck :: Deck -> Game -> Game
+setDeck deck game =
     Game { deck = deck
          , dealer = dealer game
          , player = player game }
 
-setDealer :: Game -> Dealer -> Game
-setDealer game dealer =
+setDealer :: Dealer -> Game -> Game
+setDealer dealer game =
     Game { deck = deck game
          , dealer = dealer
          , player = player game }
 
-setPlayer :: Game -> Player -> Game
-setPlayer game player =
+setPlayer :: Player -> Game -> Game
+setPlayer player game =
     Game { deck = deck game
          , dealer = dealer game
          , player = player }
@@ -44,10 +44,14 @@ drawCard :: (CardPlayer a) => (Game -> a) -> GameState ()
 drawCard cardPlayer =
     state $ \game ->
         let (card:cards) = deck game
-            set setPerson person = setPerson game $ grabCard (person game) card
-            updatedGame = if isPlayer $ cardPlayer game
-                          then set setPlayer player
-                          else set setDealer dealer
+            set setPerson person =
+                let updatedPerson = grabCard card $ person game
+                 in setDeck cards $ setPerson updatedPerson game
+            updatedGame =
+                if isPlayer $ cardPlayer game then
+                    set setPlayer player
+                else
+                    set setDealer dealer
          in ((), updatedGame)
 
 roundInit :: GameState ()

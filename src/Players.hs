@@ -4,10 +4,13 @@
 
 module Players where
 
-import Cards (Card, Hand(..), HasPoints, getPoints)
+import Cards (Card, Hand(..), HasPoints, getPoints, showCard)
 
 type Cash = Int
 type TurnIsComplete = Bool
+
+turnComplete = True
+turnIncomplete = False
 
 data Dealer = Dealer Hand deriving (Show)
 data Player = Player Hand Cash deriving (Show)
@@ -29,7 +32,7 @@ class CardPlayer a where
     
     viewHand :: TurnIsComplete -> a -> Hand
     
-    grabCard :: a -> Card -> a
+    grabCard :: Card -> a -> a
     
     hasBlackjack :: a -> Bool
     hasBlackjack player = getPoints player == 21 &&
@@ -49,9 +52,9 @@ instance CardPlayer Dealer where
     getHand (Dealer hand) = hand
     
     viewHand False = Hand . tail . getCards . getHand
-    viewHand True = getHand 
+    viewHand True = getHand
     
-    grabCard (Dealer (Hand hand)) card = Dealer $ Hand (card:hand)
+    grabCard card (Dealer (Hand hand)) = Dealer $ Hand (card:hand)
 
     isDealer _ = True
 
@@ -60,7 +63,7 @@ instance CardPlayer Player where
     
     viewHand _ = getHand
     
-    grabCard (Player (Hand hand) cash) card = Player (Hand (card:hand)) cash
+    grabCard card (Player (Hand hand) cash) = Player (Hand (card:hand)) cash
 
     isDealer _ = False
 

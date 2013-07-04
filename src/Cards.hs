@@ -1,6 +1,8 @@
 module Cards where
 
 import Control.Applicative ((<$>), (<*>))
+import Data.List (intercalate)
+import Text.Printf (printf)
 
 type Points = Int
 type Cards = [Card]
@@ -17,6 +19,19 @@ data Rank = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten
 
 data Suit = Clubs | Diamonds | Hearts | Spades
             deriving (Show, Eq, Enum)
+
+showHand :: Hand -> String
+showHand hand =
+        intercalate " " cards
+      where
+        cards = map showCard $ getCards hand
+
+showCard :: Card -> String
+showCard card =
+    printf "[%s %s]" strRank strSuit
+  where
+    strRank = show . rank $ card
+    strSuit = show . suit $ card
 
 rank :: Card -> Rank
 rank (Card r _) = r
