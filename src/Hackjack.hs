@@ -1,4 +1,4 @@
-module Hackjack (main) where
+module Main (main) where
 
 import Control.Monad (liftM)
 import Control.Monad.Trans.State (execState)

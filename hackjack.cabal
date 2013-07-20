@@ -8,7 +8,7 @@ executable hackjack
   hs-source-dirs:  src
   build-depends:   base >= 4,
                    random-shuffle,
-                   mtl
+                   transformers
   ghc-options:     -Wall
   main-is:         Hackjack.hs
   extensions:      FlexibleInstances
