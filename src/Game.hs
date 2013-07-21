@@ -1,5 +1,7 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Game where
 
+import Control.Lens
 import Data.Char
 import Control.Monad.Trans.State
 
@@ -8,58 +10,20 @@ import Deck
 import Players
 import Helpers
 
-data Game = Game { deck :: Deck
-                 , dealer :: Dealer
-                 , player :: Player }
-                 deriving (Show)
+data Game = Game
+    { _deck :: Deck
+    , _dealer :: Dealer
+    , _player :: Player
+    } deriving (Show)
 
-setDeck :: Deck -> Game -> Game
-setDeck deck game =
-    Game { deck = deck
-         , dealer = dealer game
-         , player = player game }
-
-setDealer :: Dealer -> Game -> Game
-setDealer dealer game =
-    Game { deck = deck game
-         , dealer = dealer
-         , player = player game }
-
-setPlayer :: Player -> Game -> Game
-setPlayer player game =
-    Game { deck = deck game
-         , dealer = dealer game
-         , player = player }
+makeLenses ''Game
 
 newGame :: IO Game
 newGame = do
     d <- newDeck
-    return Game { deck=d
-                , dealer=newDealer
-                , player=newPlayer }
-
-type GameState = State Game
-
-drawCard :: (CardPlayer a) => (Game -> a) -> GameState ()
-drawCard cardPlayer =
-    state $ \game ->
-        let (card:cards) = deck game
-            set setPerson person =
-                let updatedPerson = grabCard card $ person game
-                 in setDeck cards $ setPerson updatedPerson game
-            updatedGame =
-                if isPlayer $ cardPlayer game then
-                    set setPlayer player
-                else
-                    set setDealer dealer
-         in ((), updatedGame)
-
-roundInit :: GameState ()
-roundInit = do
-    drawCard player
-    drawCard dealer
-    drawCard player
-    drawCard dealer
+    return Game { _deck=d
+                , _dealer=newDealer
+                , _player=newPlayer }
 
 showRules :: InputString -> GoodOrBad OutputString
 showRules input = processResponse

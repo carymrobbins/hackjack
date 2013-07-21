@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverlappingInstances #-}
-
 module Players where
 
+import Control.Lens
 import Cards (Card, Hand(..), HasPoints, getPoints, showCard)
 
 type Cash = Int
@@ -22,7 +22,13 @@ newPlayer :: Player
 newPlayer = Player (Hand []) 0
 
 getCash :: Player -> Cash
-getCash (Player _ cash) = cash 
+getCash (Player _ c) = c
+
+setCash :: Player -> Cash -> Player
+setCash (Player h _) c = Player h c
+
+cash :: Lens' Player Cash
+cash = lens getCash setCash
 
 instance (CardPlayer a) => HasPoints a where
     getPoints = getPoints . getHand 
@@ -30,6 +36,11 @@ instance (CardPlayer a) => HasPoints a where
 class CardPlayer a where
     getHand :: a -> Hand
     
+    setHand :: a -> Hand -> a
+
+    hand :: Lens' a Hand
+    hand = lens getHand setHand
+
     viewHand :: TurnIsComplete -> a -> Hand
     
     grabCard :: Card -> a -> a
@@ -49,7 +60,9 @@ class CardPlayer a where
     isPlayer = not . isDealer
 
 instance CardPlayer Dealer where
-    getHand (Dealer hand) = hand
+    getHand (Dealer h) = h
+
+    setHand _ h = Dealer h
     
     viewHand False = Hand . tail . getCards . getHand
     viewHand True = getHand
@@ -59,8 +72,10 @@ instance CardPlayer Dealer where
     isDealer _ = True
 
 instance CardPlayer Player where
-    getHand (Player hand _) = hand
+    getHand (Player h _) = h
     
+    setHand (Player _ c) h = Player h c
+
     viewHand _ = getHand
     
     grabCard card (Player (Hand hand) cash) = Player (Hand (card:hand)) cash
