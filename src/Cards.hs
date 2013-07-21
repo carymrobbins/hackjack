@@ -1,17 +1,12 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Cards where
 
 import Control.Applicative ((<$>), (<*>))
+import Control.Lens
 import Data.List (intercalate)
 import Text.Printf (printf)
 
 type Points = Int
-type Cards = [Card]
-
-newtype Hand = Hand { getCards :: Cards }
-               deriving (Show)
-
-data Card = Card Rank Suit
-            deriving (Show, Eq)
 
 data Rank = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten
             | Jack | Queen | King | Ace
@@ -20,11 +15,21 @@ data Rank = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten
 data Suit = Clubs | Diamonds | Hearts | Spades
             deriving (Show, Eq, Enum)
 
+data Card = Card Rank Suit
+            deriving (Show, Eq)
+
+type Cards = [Card]
+
+data Hand = Hand { _cards :: Cards }
+            deriving (Show)
+
+makeLenses ''Hand
+
 showHand :: Hand -> String
 showHand hand =
         intercalate " " cards
       where
-        cards = map showCard $ getCards hand
+        cards = map showCard $ _cards hand
 
 showCard :: Card -> String
 showCard card =
@@ -56,14 +61,14 @@ instance HasPoints Card where
     getPoints (Card rank _) = min (fromEnum rank + 2) 10
 
 instance HasPoints Hand where
-    getPoints Hand { getCards = [] } = 0
+    getPoints (Hand []) = 0
     
     getPoints hand =
         if base > 21 && numAces > 0
         then maximum $ filter (<=21) possibleScores
         else base
       where
-        base = sum $ map getPoints $ getCards hand
-        numAces = length $ filter ((Ace==) . rank) $ getCards hand
+        base = sum $ map getPoints $ _cards hand
+        numAces = length $ filter ((Ace==) . rank) $ _cards hand
         possibleScores = map ((base-) . (*10)) [1..numAces]
 

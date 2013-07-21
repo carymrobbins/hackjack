@@ -4,7 +4,7 @@ import Control.Monad (liftM)
 import Control.Monad.Trans.State (execState)
 import Text.Printf
 
-import Cards (getCards, getPoints, showHand)
+import Cards (getPoints, showHand)
 import Deck (newDeck)
 import Game (Game, dealer, newGame, player, roundInit, showRules, title)
 import Helpers (interactGoodOrBad)

@@ -25,6 +25,8 @@ newGame = do
                 , _dealer=newDealer
                 , _player=newPlayer }
 
+
+
 showRules :: InputString -> GoodOrBad OutputString
 showRules input = processResponse
   where

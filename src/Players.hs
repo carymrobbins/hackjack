@@ -49,7 +49,7 @@ class CardPlayer a where
     hasBlackjack player = getPoints player == 21 &&
                           numCards player == 2
       where
-        numCards = length . getCards . getHand 
+        numCards = length . _cards . getHand 
 
     busts :: a -> Bool
     busts = (>21) . getPoints
@@ -64,7 +64,7 @@ instance CardPlayer Dealer where
 
     setHand _ h = Dealer h
     
-    viewHand False = Hand . tail . getCards . getHand
+    viewHand False = Hand . tail . _cards . getHand
     viewHand True = getHand
     
     grabCard card (Dealer (Hand hand)) = Dealer $ Hand (card:hand)

@@ -2,7 +2,7 @@ module Deck where
 
 import System.Random.Shuffle (shuffleM)
 
-import Cards (Cards, Hand(..), getCards, allCards)
+import Cards (Cards, Hand(..), _cards, allCards)
 
 
 type Deck = Cards
@@ -18,7 +18,7 @@ newDeck = shuffleM baseDeck
 
 dealCard :: Deck -> Hand -> (Deck, Hand)
 dealCard (deckTopCard:deckRest) hand =
-    (deckRest, Hand (deckTopCard:getCards hand))
+    (deckRest, Hand (deckTopCard:_cards hand))
 dealCard [] _ = error "Cannot deal a card from an empty deck."  
 
 shouldReshuffle :: Deck -> Bool
