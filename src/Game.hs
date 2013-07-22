@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RankNTypes #-}
 module Game where
 
 import Control.Lens
@@ -25,7 +26,26 @@ newGame = do
                 , _dealer=newDealer
                 , _player=newPlayer }
 
+popDeck :: State Game Card
+popDeck = do
+    game <- get
+    let c:d = game^.deck
+    deck .= d
+    return c
 
+drawCard :: CardPlayer a => Lens' Game a -> State Game ()
+drawCard playerLens = do
+    c <- popDeck
+    game <- get
+    let cs = game^.playerLens.hand.cards
+    playerLens.hand.cards .= c:cs
+
+dealCards :: State Game ()
+dealCards = do
+    drawCard player
+    drawCard dealer
+    drawCard player
+    drawCard dealer
 
 showRules :: InputString -> GoodOrBad OutputString
 showRules input = processResponse
