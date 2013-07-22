@@ -15,5 +15,6 @@ executable hackjack
   extensions:      FlexibleInstances
                    UndecidableInstances
                    OverlappingInstances
+                   RankNTypes
                    TemplateHaskell
 
