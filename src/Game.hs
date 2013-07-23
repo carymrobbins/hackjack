@@ -28,8 +28,7 @@ newGame = do
 
 popDeck :: State Game Card
 popDeck = do
-    game <- get
-    let c:d = game^.deck
+    c:d <- use deck
     deck .= d
     return c
 
