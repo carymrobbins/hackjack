@@ -32,19 +32,17 @@ popDeck = do
     deck .= d
     return c
 
-drawCard :: CardPlayer a => Lens' Game a -> State Game ()
-drawCard playerLens = do
+dealCard :: CardPlayer a => Lens' Game a -> State Game ()
+dealCard playerLens = do
     c <- popDeck
-    game <- get
-    let cs = game^.playerLens.hand.cards
-    playerLens.hand.cards .= c:cs
+    playerLens.hand.cards %= (c:)
 
-dealCards :: State Game ()
-dealCards = do
-    drawCard player
-    drawCard dealer
-    drawCard player
-    drawCard dealer
+initHands :: State Game ()
+initHands = do
+    dealCard player
+    dealCard dealer
+    dealCard player
+    dealCard dealer
 
 showRules :: InputString -> GoodOrBad OutputString
 showRules input = processResponse

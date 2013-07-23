@@ -5,7 +5,7 @@ import Test.QuickCheck
 import Test.QuickCheck.All
 
 import Cards (Card(..), Rank(..), Suit(..), Hand(..), allCards, getPoints)
-import Deck (baseDeck, dealCard, shouldReshuffle)
+import Deck (baseDeck, shouldReshuffle)
 import Players
 
 prop_weHave52Cards = length allCards == 52
@@ -43,12 +43,6 @@ prop_getPoints_8_plus_3_Aces = getPoints hand == 21
                  Card Ace Diamonds,
                  Card Ace Clubs,
                  Card Eight Hearts]
-
-prop_dealCard_pure = getCards hand == [head baseDeck]
-                  && length deck == length baseDeck - 1
-  where
-    (deck, hand) = dealCard baseDeck emptyHand
-    emptyHand = Hand []
 
 prop_shouldReshuffleFalse = not . shouldReshuffle $ baseDeck
 

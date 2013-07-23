@@ -16,11 +16,6 @@ baseDeck = concat . take numberOfDecks $ repeat allCards
 newDeck :: IO (Deck)
 newDeck = shuffleM baseDeck
 
-dealCard :: Deck -> Hand -> (Deck, Hand)
-dealCard (deckTopCard:deckRest) hand =
-    (deckRest, Hand (deckTopCard:_cards hand))
-dealCard [] _ = error "Cannot deal a card from an empty deck."  
-
 shouldReshuffle :: Deck -> Bool
 shouldReshuffle deck = length deck < length baseDeck `div` 2
 
