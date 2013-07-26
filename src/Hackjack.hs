@@ -4,54 +4,64 @@ import Control.Lens
 import Control.Monad (liftM)
 import Control.Monad.Trans.State (execState)
 import Data.Char (toLower)
-import Text.Printf
+import System.IO
+import Text.Printf (printf)
 
 import Cards (getPoints, showHand)
 import Deck (newDeck)
-import Game (Game, _dealer, dealer, initHands, newGame, _player, player)
-import Helpers 
-import Players (TurnIsComplete, turnIncomplete, turnComplete, viewHand)
+import Game
+import Helpers
+import Players
 
 main :: IO ()
-main = do
-    intro
-    
+main = intro
+
 intro :: IO ()
 intro = do
     putStrLn title
     putStrLn "Would you like me to explain the rules?"
     interactGoodOrBad showRules
-    putStrLn "Press ENTER to continue"
-    getLine
     game <- newGame
-    let g = execState initHands game
-    putStrLn $ showGame g turnIncomplete
-    putStrLn "Press ENTER to continue"
-    getLine
+    bet <- promptForBet $ game^.player.cash
+    game <- return $ gameRound bet `execState` game
+    putStrLn $ showGame game turnIncomplete
+    return ()
+
+promptForBet :: Cash -> IO Cash
+promptForBet playerCash = do
+    putStr "You have $"
+    putStrLn . show $ playerCash
+    putStrLn "Please enter your bet: "
+    bet <- getLine
+    let maybeBet = maybeRead bet :: Maybe Int
+    validate bet maybeBet
+  where
+    validate betString Nothing = do
+        putStrLn (printf "'%s' is not a number." betString)
+        promptForBet playerCash
+    validate _ (Just betValue) = return betValue
+
+waitForEnter :: IO ()
+waitForEnter = do
+    putStrLn "Press ENTER to continue." 
+    _ <- getLine
     return ()
 
 showGame :: Game -> TurnIsComplete -> String
-showGame game turn =
-    showGameBase
-        (show dealerHand)
-        (getPoints dealerHand)
-        (show playerHand)
-        (getPoints playerHand)
+showGame game turn = printfUncurried
+    "Cash: $%d\n\
+    \\n\
+    \Dealer: %s\n\
+    \        showing %d\n\
+    \Player: %s\n\
+    \        showing %d\n"
+    (game^.player.cash,
+     show dealerHand, getPoints dealerHand,
+     show playerHand, getPoints playerHand)
   where
+    printfUncurried t (a, b, c, d, e) = printf t a b c d e
     dealerHand = game^.dealer.to (viewHand turn)
     playerHand = game^.player.to (viewHand turn)
-
-showGameBase :: String -> Int -> String -> Int -> String
-showGameBase dealerHand dealerPoints playerHand playerPoints =
-    printf
-        "Dealer: %s\n\
-        \        showing %d\n\
-        \Player: %s\n\
-        \        showing %d\n"
-        dealerHand
-        dealerPoints
-        playerHand
-        playerPoints
 
 title :: String
 title = "\n\

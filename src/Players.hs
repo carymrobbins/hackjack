@@ -19,7 +19,7 @@ newDealer :: Dealer
 newDealer = Dealer $ Hand []
 
 newPlayer :: Player
-newPlayer = Player (Hand []) 0
+newPlayer = Player (Hand []) 100
 
 getCash :: Player -> Cash
 getCash (Player _ c) = c

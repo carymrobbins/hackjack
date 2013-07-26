@@ -2,7 +2,7 @@
 module Cards where
 
 import Control.Applicative ((<$>), (<*>))
-import Control.Lens
+import Control.Lens (makeLenses)
 import Data.List (intercalate)
 import Text.Printf (printf)
 
@@ -27,9 +27,9 @@ makeLenses ''Hand
 
 showHand :: Hand -> String
 showHand hand =
-        intercalate " " cards
+        intercalate " " cs
       where
-        cards = map showCard $ _cards hand
+        cs = map showCard $ _cards hand
 
 showCard :: Card -> String
 showCard card =
@@ -58,7 +58,7 @@ class HasPoints a where
 
 instance HasPoints Card where
     getPoints (Card Ace _) = 11
-    getPoints (Card rank _) = min (fromEnum rank + 2) 10
+    getPoints (Card r _) = min (fromEnum r + 2) 10
 
 instance HasPoints Hand where
     getPoints (Hand []) = 0

@@ -3,13 +3,12 @@
 module Game where
 
 import Control.Lens
-import Data.Char
-import Control.Monad.Trans.State
+import Control.Monad.Trans.State (State)
 
-import Cards
-import Deck
+import Cards (Card, cards)
+import Deck (Deck, newDeck)
 import Players
-
+ 
 data Game = Game
     { _deck :: Deck
     , _dealer :: Dealer
@@ -42,4 +41,9 @@ initHands = do
     dealCard dealer
     dealCard player
     dealCard dealer
+
+gameRound :: Cash -> State Game ()
+gameRound bet = do
+    player.cash -= bet
+    initHands
 
