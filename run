@@ -1,0 +1,5 @@
+#!/bin/bash
+cabal configure
+cabal build
+$(dirname $0)/dist/build/hackjack/hackjack
+
