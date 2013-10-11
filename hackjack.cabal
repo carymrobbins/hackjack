@@ -2,19 +2,11 @@ name:           hackjack
 version:        0.1
 cabal-version:  >=1.2
 build-type:     Simple
-author:         crobbins
+author:         Cary Robbins
 
 executable hackjack
-  hs-source-dirs:  src
+  hs-source-dirs:  .
   build-depends:   base >= 4,
-                   lens,
-                   random-shuffle,
-                   transformers
+                   random-shuffle
   ghc-options:     -Wall
-  main-is:         Hackjack.hs
-  extensions:      FlexibleInstances
-                   UndecidableInstances
-                   OverlappingInstances
-                   RankNTypes
-                   TemplateHaskell
 
