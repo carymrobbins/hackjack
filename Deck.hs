@@ -2,7 +2,7 @@ module Deck where
 
 import System.Random.Shuffle (shuffleM)
 
-import Cards (Cards, Hand(..), _cards, allCards)
+import Cards (Cards, Hand(..), handCards, allCards)
 
 
 type Deck = Cards
