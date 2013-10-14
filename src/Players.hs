@@ -1,6 +1,7 @@
 module Players where
 
 import Cards (Card, Hand(..), Points, handPoints)
+import Deck (Deck, popDeck)
 
 type Cash = Int
 
@@ -27,9 +28,14 @@ class CardPlayer a where
     
     setHand :: a -> Hand -> a
 
-    grabCard :: a -> Card -> a
-    grabCard p c = setHand p . Hand . (c:) . handCards . getHand $ p
+    pushCard :: a -> Card -> a
+    pushCard p c = setHand p . Hand . (c:) . handCards . getHand $ p
     
+    drawCard :: a -> Deck -> (a, Deck)
+    drawCard p d = (pushCard p card, newDeck) 
+      where
+        (newDeck, card) = popDeck d
+
     playerPoints :: a -> Points
     playerPoints = handPoints . getHand
 
