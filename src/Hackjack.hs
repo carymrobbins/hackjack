@@ -29,10 +29,13 @@ intro = do
 
 promptForBet :: Cash -> IO Cash
 promptForBet playerCash = do
-    putStr "You have $"
-    putStrLn . show $ playerCash
+    putStrLn $ printf "You have $%d" playerCash
     putStrLn "Please enter your bet: "
-    bet <- getLine
+    bet <- getLine >>= (\bet ->
+        if length bet > 0 && head bet == '$' then
+            return $ tail bet
+        else
+            return bet)
     let maybeBet = maybeRead bet :: Maybe Int
     validate bet maybeBet
   where
@@ -45,6 +48,9 @@ promptForBet playerCash = do
             promptForBet playerCash
         | betValue `mod` 10 /= 0 = do
             putStrLn "Bet must be a multiple of 10."
+            promptForBet playerCash
+        | betValue == 0 = do
+            putStrLn "Bet must be greater than $0."
             promptForBet playerCash
         | otherwise = return betValue
 
