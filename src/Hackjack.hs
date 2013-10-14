@@ -37,9 +37,16 @@ promptForBet playerCash = do
     validate bet maybeBet
   where
     validate betString Nothing = do
-        putStrLn (printf "'%s' is not a number." betString)
+        putStrLn $ printf "'%s' is not a number." betString
         promptForBet playerCash
-    validate _ (Just betValue) = return betValue
+    validate betString (Just betValue)
+        | betValue > playerCash = do
+            putStrLn "You don't have enough cash!"
+            promptForBet playerCash
+        | betValue `mod` 10 /= 0 = do
+            putStrLn "Bet must be a multiple of 10."
+            promptForBet playerCash
+        | otherwise = return betValue
 
 waitForEnter :: IO ()
 waitForEnter = do

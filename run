@@ -1,5 +1,7 @@
 #!/bin/bash
+cd $(dirname $0)
 cabal configure
 cabal build
-$(dirname $0)/dist/build/hackjack/hackjack
+./dist/build/hackjack/hackjack
+cd -
 
