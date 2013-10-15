@@ -56,9 +56,12 @@ allCards = Card <$> allRanks <*> allSuits
 class HasPoints a where
     getPoints :: a -> Points
 
+instance HasPoints Rank where
+    getPoints Ace = 11
+    getPoints r = min (fromEnum r + 2) 10
+
 instance HasPoints Card where
-    getPoints (Card Ace _) = 11
-    getPoints (Card r _) = min (fromEnum r + 2) 10
+    getPoints = getPoints . rank
 
 instance HasPoints Hand where
     getPoints (Hand []) = 0
