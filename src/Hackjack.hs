@@ -12,6 +12,7 @@ import Deck (newDeck)
 import Game
 import Helpers
 import Players
+import PPrint
 
 main :: IO ()
 main = intro
@@ -69,8 +70,8 @@ showGame game turn = printfUncurried
     \Player: %s\n\
     \        showing %d\n"
     (game^.player.cash,
-     show dealerHand, getPoints dealerHand,
-     show playerHand, getPoints playerHand)
+     pprint dealerHand, getPoints dealerHand,
+     pprint playerHand, getPoints playerHand)
   where
     printfUncurried t (a, b, c, d, e) = printf t a b c d e
     dealerHand = game^.dealer.to (viewHand turn)

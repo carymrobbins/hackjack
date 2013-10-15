@@ -1,6 +1,8 @@
 module PPrint where
 
-import Cards (getPoints, Card(..), Rank(..), Suit(..))
+import Data.List
+
+import Cards
 
 class PPrint a where
     pprint :: a -> String
@@ -17,4 +19,7 @@ instance PPrint Rank where
 
 instance PPrint Card where
     pprint (Card r s) = concat [pprint r, pprint s]
+
+instance PPrint Hand where
+    pprint = concat . intersperse " " . map pprint . _cards
 
