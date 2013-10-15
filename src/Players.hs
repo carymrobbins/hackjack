@@ -9,9 +9,6 @@ import Cards (Card, Hand(..), HasPoints, getPoints, showCard)
 type Cash = Int
 type TurnIsComplete = Bool
 
-turnComplete = True
-turnIncomplete = False
-
 data Dealer = Dealer Hand deriving (Show)
 data Player = Player Hand Cash deriving (Show)
 

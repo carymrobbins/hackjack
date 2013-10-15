@@ -25,7 +25,7 @@ intro = do
     game <- newGame
     bet <- promptForBet $ game^.player.cash
     game <- return $ gameRound bet `execState` game
-    putStrLn $ showGame game turnIncomplete
+    putStrLn $ pprint game
     return ()
 
 promptForBet :: Cash -> IO Cash
@@ -60,22 +60,6 @@ waitForEnter = do
     putStrLn "Press ENTER to continue." 
     _ <- getLine
     return ()
-
-showGame :: Game -> TurnIsComplete -> String
-showGame game turn = printfUncurried
-    "Cash: $%d\n\
-    \\n\
-    \Dealer: %s\n\
-    \        showing %d\n\
-    \Player: %s\n\
-    \        showing %d\n"
-    (game^.player.cash,
-     pprint dealerHand, getPoints dealerHand,
-     pprint playerHand, getPoints playerHand)
-  where
-    printfUncurried t (a, b, c, d, e) = printf t a b c d e
-    dealerHand = game^.dealer.to (viewHand turn)
-    playerHand = game^.player.to (viewHand turn)
 
 title :: String
 title = "\n\

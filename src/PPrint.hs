@@ -2,7 +2,11 @@ module PPrint where
 
 import Data.List
 
+import Control.Lens
+
 import Cards
+import Game
+import Players
 
 class PPrint a where
     pprint :: a -> String
@@ -22,4 +26,15 @@ instance PPrint Card where
 
 instance PPrint Hand where
     pprint = concat . intersperse " " . map pprint . _cards
+
+instance PPrint Game where
+    pprint game = unlines
+        [ "Cash $" ++ g^.player.cash.to show
+        , "Dealer: " ++ g^.dealer.hand.to pprint
+        , "        showing " ++ g^.dealer.hand.to (show . getPoints)
+        , "Player: " ++ g^.player.hand.to pprint
+        , "        showing " ++ g^.player.hand.to (show . getPoints)
+        ]
+      where
+        g = viewGame game
 

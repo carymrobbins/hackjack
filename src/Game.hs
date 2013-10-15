@@ -13,6 +13,7 @@ data Game = Game
     { _deck :: Deck
     , _dealer :: Dealer
     , _player :: Player
+    , _turnComplete :: Bool
     } deriving (Show)
 
 makeLenses ''Game
@@ -22,7 +23,9 @@ newGame = do
     d <- newDeck
     return Game { _deck=d
                 , _dealer=newDealer
-                , _player=newPlayer }
+                , _player=newPlayer 
+                , _turnComplete=False
+                }
 
 popDeck :: State Game Card
 popDeck = do
@@ -46,4 +49,9 @@ gameRound :: Cash -> State Game ()
 gameRound bet = do
     player.cash -= bet
     initHands
+
+viewGame :: Game -> Game
+viewGame g = g { _dealer=Dealer visibleHand }
+  where
+    visibleHand = viewHand (g^.turnComplete) (g^.dealer)
 
