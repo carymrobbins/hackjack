@@ -2,13 +2,24 @@
 {-# LANGUAGE RankNTypes #-}
 module Game where
 
+import Control.Applicative
 import Control.Lens
 import Control.Monad.Trans.State (State)
+import Data.Char
 
 import Cards (Card, cards)
 import Deck (Deck, newDeck)
 import Players
- 
+
+data Move = Hit | Stay
+            deriving (Show, Enum)
+
+moveMap :: [(String, Move)]
+moveMap = [ (f m, m) | m <- [Hit ..], f <- [lowerShow, firstShow] ]
+  where
+     lowerShow = map toLower . show
+     firstShow = pure . head . lowerShow
+
 data Game = Game
     { _deck :: Deck
     , _dealer :: Dealer
@@ -49,6 +60,8 @@ gameRound :: Cash -> State Game ()
 gameRound bet = do
     player.cash -= bet
     initHands
+
+
 
 viewGame :: Game -> Game
 viewGame g = g { _dealer=Dealer visibleHand }

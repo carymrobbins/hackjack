@@ -15,31 +15,30 @@ import Players
 import PPrint
 
 main :: IO ()
-main = intro
-
-intro :: IO ()
-intro = do
+main = do
     putStrLn title
     putStrLn "Would you like me to explain the rules?"
     interactGoodOrBad showRules
     game <- newGame
     bet <- promptForBet $ game^.player.cash
-    game <- return $ gameRound bet `execState` game
+    game <- return $ execState (gameRound bet) game
     putStrLn $ pprint game
+    promptForMove
     return ()
 
 promptForBet :: Cash -> IO Cash
 promptForBet playerCash = do
     putStrLn $ printf "You have $%d" playerCash
     putStrLn "Please enter your bet: "
-    bet <- getLine >>= (\bet ->
-        if length bet > 0 && head bet == '$' then
-            return $ tail bet
-        else
-            return bet)
+    bet <- getLine >>= cleanBet
     let maybeBet = maybeRead bet :: Maybe Int
     validate bet maybeBet
   where
+    cleanBet bet =
+        if length bet > 0 && head bet == '$' then
+            return $ tail bet
+        else
+            return bet
     validate betString Nothing = do
         putStrLn $ printf "'%s' is not a number." betString
         promptForBet playerCash
@@ -50,10 +49,19 @@ promptForBet playerCash = do
         | betValue `mod` 10 /= 0 = do
             putStrLn "Bet must be a multiple of 10."
             promptForBet playerCash
-        | betValue == 0 = do
+        | betValue <= 0 = do
             putStrLn "Bet must be greater than $0."
             promptForBet playerCash
         | otherwise = return betValue
+
+promptForMove :: IO Move
+promptForMove = do
+    putStrLn "Would you like to hit or stay?"
+    move <- getLine
+    handleResponse $ lookup move moveMap
+  where
+    handleResponse (Just m) = return m
+    handleResponse Nothing = putStrLn "Invalid move." >> promptForMove
 
 waitForEnter :: IO ()
 waitForEnter = do
