@@ -1,7 +1,9 @@
 module Cards where
 
 import Control.Applicative ((<$>), (<*>))
-import Data.List (intercalate)
+import Data.List (intercalate, sort)
+import Data.Set (Set)
+import qualified Data.Set as Set
 
 type Points = Int
 
@@ -31,17 +33,23 @@ allSuits = [Clubs ..]
 allCards :: Cards
 allCards = Card <$> allRanks <*> allSuits
 
-cardPoints (Card Ace _) = 11
-cardPoints (Card r _) = min (fromEnum r + 2) 10
+cardPoints :: Card -> Set Int
+cardPoints (Card Ace _) = Set.fromList [1, 11]
+cardPoints (Card r _) = Set.fromList [min (fromEnum r + 2) 10]
 
+handPoints :: Hand -> Int
 handPoints (Hand []) = 0
+handPoints (Hand cs) = bestPoints . possiblePoints $ cs
 
-handPoints hand =
-    if base > 21 && numAces > 0
-    then maximum $ filter (<=21) possibleScores
-    else base
+possiblePoints :: Cards -> Set Int
+possiblePoints [] = Set.singleton 0
+possiblePoints cs =
+    Set.fromList . map sum . sequence $ map (Set.toList . cardPoints) cs
+
+bestPoints :: Set Int -> Int
+bestPoints set
+    | Set.null set = 0
+    | otherwise = head $ (Set.toDescList good) ++ (Set.toAscList bust)
   where
-    base = sum $ map cardPoints $ handCards hand
-    numAces = length $ filter ((Ace==) . rank) $ handCards hand
-    possibleScores = map ((base-) . (*10)) [1..numAces]
+    (good, bust) = Set.partition (<= 21) set
 
