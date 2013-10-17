@@ -33,9 +33,9 @@ allSuits = [Clubs ..]
 allCards :: Cards
 allCards = Card <$> allRanks <*> allSuits
 
-cardPoints :: Card -> Set Int
-cardPoints (Card Ace _) = Set.fromList [1, 11]
-cardPoints (Card r _) = Set.fromList [min (fromEnum r + 2) 10]
+rankPoints :: Rank -> Set Int
+rankPoints Ace = Set.fromList [1, 11]
+rankPoints r = Set.fromList [min (fromEnum r + 2) 10]
 
 handPoints :: Hand -> Int
 handPoints (Hand []) = 0
@@ -44,7 +44,8 @@ handPoints (Hand cs) = bestPoints . possiblePoints $ cs
 possiblePoints :: Cards -> Set Int
 possiblePoints [] = Set.singleton 0
 possiblePoints cs =
-    Set.fromList . map sum . sequence $ map (Set.toList . cardPoints) cs
+    Set.fromList . map sum . sequence $
+        map (Set.toList . rankPoints . rank) cs
 
 bestPoints :: Set Int -> Int
 bestPoints set
