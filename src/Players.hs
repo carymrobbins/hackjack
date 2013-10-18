@@ -1,60 +1,54 @@
 module Players where
 
-import Cards (Card, Hand(..), Points, handPoints)
-import Deck (Deck, popDeck)
+import Cards (Hand(..), handPoints)
 
 type Cash = Int
 
-data Dealer = Dealer Hand deriving (Show)
-data Player = Player Hand Cash deriving (Show)
+data Dealer = Dealer
+    deriving (Show)
 
-newDealer :: Dealer
-newDealer = Dealer $ Hand []
+data Player = Player { cash :: Cash }
+    deriving (Show)
 
-newPlayer :: Player
-newPlayer = Player (Hand []) 100
+data CardPlayer a = CardPlayer
+    { cardPlayer :: a
+    , hand :: Hand
+    }
+    deriving (Show)
 
-getCash :: Player -> Cash
-getCash (Player _ c) = c
+newDealer :: CardPlayer Dealer
+newDealer = CardPlayer
+    { cardPlayer=Dealer
+    , hand=[]
+    }
 
-setCash :: Player -> Cash -> Player
-setCash (Player h _) c = Player h c
+newPlayer :: CardPlayer Player
+newPlayer = CardPlayer
+    { cardPlayer=Player { cash=0 }
+    , hand=[]
+    }
 
-modCash :: Player -> (Cash -> Cash) -> Player
-modCash p f = setCash p . f . getCash $ p
+playerPoints :: CardPlayer a -> Int
+playerPoints = handPoints . hand
 
-class CardPlayer a where
-    getHand :: a -> Hand
-    
-    setHand :: a -> Hand -> a
+hasBlackjack :: CardPlayer a -> Bool
+hasBlackjack p = has21Points && has2Cards
+  where
+    has21Points = (== 21) . handPoints . hand $ p
+    has2Cards = (== 2) . length . hand $ p
 
-    pushCard :: a -> Card -> a
-    pushCard p c = setHand p . Hand . (c:) . handCards . getHand $ p
-    
-    drawCard :: a -> Deck -> (a, Deck)
-    drawCard p d = (pushCard p card, newDeck) 
-      where
-        (newDeck, card) = popDeck d
+busts :: CardPlayer a -> Bool
+busts = (> 21) . handPoints . hand
 
-    playerPoints :: a -> Points
-    playerPoints = handPoints . getHand
+setHand :: CardPlayer a -> Hand -> CardPlayer a
+setHand p h = p { hand=h }
 
-    hasBlackjack :: a -> Bool
-    hasBlackjack player = playerPoints player == 21 &&
-                          numCards player == 2
-      where
-        numCards = length . handCards . getHand 
+modHand :: CardPlayer a -> (Hand -> Hand) -> CardPlayer a
+modHand p f = setHand p . f . hand $ p
 
-    busts :: a -> Bool
-    busts = (>21) . playerPoints
+setCash :: CardPlayer Player -> Cash -> CardPlayer Player
+setCash p c = p { cardPlayer=Player { cash=c } }
 
-instance CardPlayer Dealer where
-    getHand (Dealer h) = h
-
-    setHand _ h = Dealer h
-    
-instance CardPlayer Player where
-    getHand (Player h _) = h
-    
-    setHand (Player _ c) h = Player h c
+modCash :: CardPlayer Player -> (Cash -> Cash) -> CardPlayer Player
+modCash p f = setCash p . f . cash . cardPlayer $ p
 

@@ -1,49 +1,32 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE RankNTypes #-}
 module Game where
 
-import Control.Lens
-import Control.Monad.Trans.State (State)
+import Deck (Deck(..), newDeck)
+import Players (CardPlayer(..), Dealer(..), Player(..),
+                newDealer, newPlayer)
 
-import Cards (Card, cards)
-import Deck (Deck, newDeck)
-import Players
- 
+data IOState = NewGame | GetBet | PlayerMove
+    deriving (Show)
+
+data PureState = StartGame | InitialDeal
+    deriving (Show)
+
+type Bet = Int
+
 data Game = Game
-    { _deck :: Deck
-    , _dealer :: Dealer
-    , _player :: Player
-    } deriving (Show)
-
-makeLenses ''Game
+    { dealer :: CardPlayer Dealer
+    , player :: CardPlayer Player
+    , deck :: Deck
+    , bet :: Bet
+    }
+    deriving (Show)
 
 newGame :: IO Game
 newGame = do
     d <- newDeck
-    return Game { _deck=d
-                , _dealer=newDealer
-                , _player=newPlayer }
-
-popDeck :: State Game Card
-popDeck = do
-    c:d <- use deck
-    deck .= d
-    return c
-
-dealCard :: CardPlayer a => Lens' Game a -> State Game ()
-dealCard playerLens = do
-    c <- popDeck
-    playerLens.hand.cards %= (c:)
-
-initHands :: State Game ()
-initHands = do
-    dealCard player
-    dealCard dealer
-    dealCard player
-    dealCard dealer
-
-gameRound :: Cash -> State Game ()
-gameRound bet = do
-    player.cash -= bet
-    initHands
+    return Game
+        { dealer=newDealer
+        , player=newPlayer
+        , deck=d
+        , bet=0
+        }
 

@@ -19,10 +19,7 @@ data Card = Card { rank :: Rank
                  }
             deriving (Show, Eq)
 
-type Cards = [Card]
-
-data Hand = Hand { handCards :: Cards }
-            deriving (Show)
+type Hand = [Card]
 
 allRanks :: [Rank]
 allRanks = [Two ..]
@@ -30,24 +27,24 @@ allRanks = [Two ..]
 allSuits :: [Suit]
 allSuits = [Clubs ..]
 
-allCards :: Cards
+allCards :: [Card]
 allCards = Card <$> allRanks <*> allSuits
 
 rankPoints :: Rank -> Set Int
 rankPoints Ace = Set.fromList [1, 11]
 rankPoints r = Set.fromList [min (fromEnum r + 2) 10]
 
-handPoints :: Hand -> Int
-handPoints (Hand []) = 0
-handPoints (Hand cs) = bestPoints . possiblePoints $ cs
+handPoints :: Hand -> Points
+handPoints [] = 0
+handPoints cs = bestPoints . possiblePoints $ cs
 
-possiblePoints :: Cards -> Set Int
+possiblePoints :: [Card] -> Set Points
 possiblePoints [] = Set.singleton 0
 possiblePoints cs =
     Set.fromList . map sum . sequence $
         map (Set.toList . rankPoints . rank) cs
 
-bestPoints :: Set Int -> Int
+bestPoints :: Set Points -> Points
 bestPoints set
     | Set.null set = 0
     | otherwise = head $ (Set.toDescList good) ++ (Set.toAscList bust)
