@@ -96,9 +96,12 @@ handleState DealerMove game
     | (handPoints . hand . dealer $ game) < dealerHitMax = undefined
     | otherwise = undefined
     
-handleState PlayerWins game = (FinalResults, updateCashFromBet game (+))
+handleState PlayerWins game = (FinalResults, game')
+  where
+    game' = game
+        { player=modCash (player game) (+ bet game * 2) }
 
-handleState DealerWins game = (FinalResults, updateCashFromBet game (-))
+handleState DealerWins game = (FinalResults, game)
 
 getBet :: Game -> IO (PureState, Game)
 getBet game = do
