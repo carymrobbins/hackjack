@@ -1,6 +1,6 @@
 module Players where
 
-import Cards (Hand(..), handPoints)
+import Cards (Hand(..), Points, handPoints)
 
 type Cash = Int
 
@@ -16,6 +16,9 @@ data CardPlayer a = CardPlayer
     }
     deriving (Show)
 
+dealerHitMax :: Points
+dealerHitMax = 17
+
 newDealer :: CardPlayer Dealer
 newDealer = CardPlayer
     { cardPlayer=Dealer
@@ -24,7 +27,7 @@ newDealer = CardPlayer
 
 newPlayer :: CardPlayer Player
 newPlayer = CardPlayer
-    { cardPlayer=Player { cash=0 }
+    { cardPlayer=Player { cash=100 }
     , hand=[]
     }
 

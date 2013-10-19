@@ -2,13 +2,7 @@ module Game where
 
 import Deck (Deck(..), newDeck)
 import Players (CardPlayer(..), Dealer(..), Player(..),
-                newDealer, newPlayer)
-
-data IOState = NewGame | GetBet | PlayerMove
-    deriving (Show)
-
-data PureState = StartGame | InitialDeal
-    deriving (Show)
+                newDealer, newPlayer, modCash)
 
 type Bet = Int
 
@@ -29,4 +23,14 @@ newGame = do
         , deck=d
         , bet=0
         }
+
+hideDealerCard :: Game -> Game
+hideDealerCard game = game
+    { dealer=(dealer game)
+        { hand=take 1 . hand . dealer $ game }
+    }
+
+updateCashFromBet :: Game -> (Int -> Int -> Int) -> Game
+updateCashFromBet game op =
+    game { player=modCash (player game) (flip op . bet $ game) }
 
