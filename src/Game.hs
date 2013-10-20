@@ -14,15 +14,18 @@ data Game = Game
     }
     deriving (Show)
 
+baseGame :: Game
+baseGame = Game
+    { dealer=newDealer
+    , player=newPlayer
+    , deck=[]
+    , bet=0
+    }
+
 newGame :: IO Game
 newGame = do
     d <- newDeck
-    return Game
-        { dealer=newDealer
-        , player=newPlayer
-        , deck=d
-        , bet=0
-        }
+    return baseGame { deck=d }
 
 hideDealerCard :: Game -> Game
 hideDealerCard game = game

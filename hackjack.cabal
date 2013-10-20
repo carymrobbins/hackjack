@@ -5,8 +5,10 @@ build-type:     Simple
 author:         Cary Robbins
 
 executable hackjack
-  hs-source-dirs:  .
-  build-depends:   base >= 4,
-                   random-shuffle
-  ghc-options:     -Wall
+  hs-source-dirs:   src
+  build-depends:    base >= 4,
+                    containers,
+                    random-shuffle
+  ghc-options:      -Wall
+  main-is:          Main.hs
 

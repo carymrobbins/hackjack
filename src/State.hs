@@ -3,20 +3,25 @@ module State where
 import Data.Char (toLower)
 import Cards (handPoints)
 import Deck (newDeck, shouldReshuffle)
-import Game (Game(..), Bet, hideDealerCard, updateCashFromBet)
-import Helpers (clearScreen, maybeRead, waitForEnter)
+import Game (Game(..), Bet, hideDealerCard, newGame, updateCashFromBet)
+import Helpers (clearScreen, maybeRead, prompt, waitForEnter)
 import Players (Player(..), CardPlayer(..), modCash, modHand, setHand,
-                hasBlackjack, busts, dealerHitMax)
+                hasBlackjack, busts, dealerHitMax, playerPoints)
 import PPrint (pprint)
 
-data IOState = NewGame | Reshuffle | GetBet | GetMove | DealerHit
-             | PlayerBlackjack | PlayerBusts
-             | DealerBlackjack | DealerBusts
-             | FinalResults
+data State = IOState IOState | PureState PureState
     deriving (Show)
 
-data PureState = StartGame | InitialDeal | PlayerHit | PlayerStay | DealerMove
-               | CheckPlayer | PlayerWins | CheckDealer | DealerWins | Tie
+data IOState = NewGame | Reshuffle | GetBet | GetMove | ShowDealerHit
+             | PlayerBlackjack | PlayerBusts | ShowPlayerWins
+             | DealerBlackjack | DealerBusts | ShowDealerWins
+             | ShowTie | FinalResults | GameOver | Quit | PlayAgain
+    deriving (Show)
+
+data PureState = StartGame | InitialDeal | CheckBlackjacks | PlayerHit | PlayerStay | DealerMove
+               | CheckPlayerHit | PlayerWins
+               | CheckDealerHit | DealerWins
+               | FindWinner | Tie | PlayerQuit
     deriving (Show)
 
 handleIO :: IOState -> Game -> IO (PureState, Game)
@@ -44,28 +49,66 @@ handleIO GetMove game = do
     putStrLn . pprint . hideDealerCard $ game
     getMove game
 
-handleIO PlayerBlackjack game = do
-    clearScreen
-    putStrLn "You got a blackjack, you win!"
-    return (PlayerWins, game)
-
 handleIO PlayerBusts game = do
     clearScreen
     putStrLn "You bust, dealer wins."
-    return (DealerWins, game)
+    handleIO FinalResults game
 
-handleIO FinalResults game = do
+handleIO ShowDealerHit game = do
+    clearScreen
+    putStrLn "Dealer hits.\n"
     putStrLn . pprint $ game
     waitForEnter
+    return (DealerMove, game)
+
+handleIO DealerBusts game = do
+    clearScreen
+    putStrLn "Dealer busts, you win!"
+    handleIO FinalResults game
+
+handleIO FinalResults game = do
+    putStrLn . ('\n':) . pprint $ game
+    waitForEnter
     return (StartGame, game)
+
+handleIO PlayerBlackjack game = do
+    clearScreen
+    putStrLn "You got a blackjack, you win!"
+    handleIO FinalResults game
+
+handleIO DealerBlackjack game = do
+    clearScreen
+    putStrLn "Dealer got a blackjack, dealer wins."
+    handleIO FinalResults game
+
+handleIO ShowPlayerWins game = do
+    clearScreen
+    putStrLn "You win!"
+    handleIO FinalResults game
+
+handleIO ShowDealerWins game = do
+    clearScreen
+    putStrLn "Dealer wins."
+    handleIO FinalResults game
+
+handleIO ShowTie game = do
+    clearScreen
+    putStrLn "Push - it's a tie game!"
+    handleIO FinalResults game
+
+handleIO GameOver game = do
+    clearScreen
+    putStrLn "GAME OVER\n"
+    getPlayAgain game
 
 handleState :: PureState -> Game -> (IOState, Game)
 
 handleState StartGame game
+    | (cash . cardPlayer . player $ game) == 0 = (GameOver, game)
     | shouldReshuffle $ deck game = (Reshuffle, game)
     | otherwise = (GetBet, game)
 
-handleState InitialDeal game = (GetMove, game')
+handleState InitialDeal game = handleState CheckBlackjacks game'
   where
     ([c1, c2, c3, c4], rest) = splitAt 4 . deck $ game
     player' = modCash (player game) (subtract . bet $ game)
@@ -75,7 +118,15 @@ handleState InitialDeal game = (GetMove, game')
         , deck=rest
         }
 
-handleState PlayerHit game = handleState CheckPlayer game'
+handleState CheckBlackjacks game
+    | hasBlackjack (player game) && hasBlackjack (dealer game) = handleState Tie game
+    | hasBlackjack $ player game = let (_, game') = handleState PlayerWins game
+                                   in (PlayerBlackjack, game')
+    | hasBlackjack $ dealer game = let (_, game') = handleState DealerWins game
+                                   in (DealerBlackjack, game')
+    | otherwise = (GetMove, game)
+
+handleState PlayerHit game = handleState CheckPlayerHit game'
   where
     (c:rest) = deck game
     game' = game
@@ -85,28 +136,46 @@ handleState PlayerHit game = handleState CheckPlayer game'
 
 handleState PlayerStay game = handleState DealerMove game
 
-handleState CheckPlayer game
-    | hasBlackjack (player game) && hasBlackjack (dealer game) = handleState Tie game
-    | hasBlackjack $ player game = (PlayerBlackjack, game)
-    | hasBlackjack $ dealer game = (DealerBlackjack, game)
+handleState CheckPlayerHit game
     | busts $ player game = (PlayerBusts, game)
     | otherwise = (GetMove, game)
 
 handleState DealerMove game
-    | (handPoints . hand . dealer $ game) < dealerHitMax = undefined
-    | otherwise = undefined
-    
-handleState PlayerWins game = (FinalResults, game')
+    | (playerPoints . dealer $ game) < dealerHitMax = handleState CheckDealerHit game'
+    | otherwise = handleState FindWinner game
+  where
+    (c:rest) = deck game
+    game' = game
+        { dealer=modHand (dealer game) (c:)
+        , deck=rest
+        }
+
+handleState CheckDealerHit game
+    | busts . dealer $ game = (DealerBusts, snd . handleState PlayerWins $ game)
+    | otherwise = (ShowDealerHit, game) 
+
+handleState FindWinner game
+    | playerPoints (dealer game) > playerPoints (player game) = handleState DealerWins game
+    | playerPoints (dealer game) < playerPoints (player game) = handleState PlayerWins game
+    | otherwise = handleState Tie game
+
+handleState PlayerWins game = (ShowPlayerWins, game')
   where
     game' = game
         { player=modCash (player game) (+ bet game * 2) }
 
-handleState DealerWins game = (FinalResults, game)
+handleState DealerWins game = (ShowDealerWins, game)
+
+handleState Tie game = (ShowTie, game')
+  where
+    game' = game
+        { player=modCash (player game) (+ bet game) }
+
+handleState PlayerQuit game = (Quit, game)
 
 getBet :: Game -> IO (PureState, Game)
 getBet game = do
-    putStr "Place your bet: "
-    response <- getLine
+    response <- prompt "Place your bet: "
     handleBetResponse (maybeRead response) game
 
 handleBetResponse :: Maybe Bet -> Game -> IO (PureState, Game)
@@ -122,12 +191,24 @@ handleBetResponse (Just b) game
 
 getMove :: Game -> IO (PureState, Game)
 getMove game = do
-    putStr "Would you like to hit or stay? "
-    response <- getLine
+    response <- prompt "Would you like to hit or stay? "
     handleMoveResponse (map toLower response) game
 
 handleMoveResponse :: String -> Game -> IO (PureState, Game)
 handleMoveResponse "hit" game = return (PlayerHit, game)
 handleMoveResponse "stay" game = return (PlayerStay, game)
 handleMoveResponse _ game = putStrLn "Invalid move." >> getMove game
+
+getPlayAgain :: Game -> IO (PureState, Game)
+getPlayAgain game = do
+    response <- prompt "Would you like to play again? "
+    handlePlayAgainResponse (map toLower response) game
+
+handlePlayAgainResponse :: String -> Game -> IO (PureState, Game)
+handlePlayAgainResponse response game
+    | response `elem` ["yes", "y"] = do
+        game' <- newGame
+        return (StartGame, game')
+    | response `elem` ["no", "n"] = return (PlayerQuit, game)
+    | otherwise = putStrLn "Please say yes or no." >> getPlayAgain game
 

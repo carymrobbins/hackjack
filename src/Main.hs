@@ -8,7 +8,10 @@ main :: IO ()
 main = newGame >>= mainLoop NewGame >> return ()
 
 mainLoop :: IOState -> Game -> IO (IOState, Game)
-mainLoop state game = 
+
+mainLoop Quit game = return (Quit, game)
+
+mainLoop state game =
     handleIO state game >>=
     return . uncurry handleState >>=
     uncurry mainLoop
