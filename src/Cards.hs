@@ -8,16 +8,17 @@ import qualified Data.Set as Set
 type Points = Int
 
 data Rank = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten
-            | Jack | Queen | King | Ace
-            deriving (Show, Eq, Enum)
+          | Jack | Queen | King | Ace
+    deriving (Show, Eq, Enum)
 
 data Suit = Clubs | Diamonds | Hearts | Spades
-            deriving (Show, Eq, Enum)
+    deriving (Show, Eq, Enum)
 
-data Card = Card { rank :: Rank
-                 , suit :: Suit
-                 }
-            deriving (Show, Eq)
+data Card = Card
+    { rank :: Rank
+    , suit :: Suit
+    }
+    deriving (Show, Eq)
 
 type Hand = [Card]
 

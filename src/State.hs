@@ -9,9 +9,6 @@ import Players (Player(..), CardPlayer(..), modCash, modHand, setHand,
                 hasBlackjack, busts, dealerHitMax, playerPoints)
 import PPrint (pprint)
 
-data State = IOState IOState | PureState PureState
-    deriving (Show)
-
 data IOState = NewGame | Reshuffle | GetBet | GetMove | ShowDealerHit
              | PlayerBlackjack | PlayerBusts | ShowPlayerWins
              | DealerBlackjack | DealerBusts | ShowDealerWins
