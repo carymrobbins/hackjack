@@ -3,7 +3,8 @@ module State where
 import Data.Char (toLower)
 import Cards (handPoints)
 import Deck (newDeck, shouldReshuffle)
-import Game (Game(..), Bet, hideDealerCard, newGame, updateCashFromBet)
+import Game (Game(..), Bet, hideDealerCard, newGame, updateCashFromBet,
+             dealCard)
 import Helpers (clearScreen, maybeRead, prompt, waitForEnter)
 import Players (Player(..), CardPlayer(..), modCash, modHand, setHand,
                 hasBlackjack, busts, dealerHitMax, playerPoints)
@@ -15,9 +16,9 @@ data IOState = NewGame | Reshuffle | GetBet | GetMove | ShowDealerHit
              | ShowTie | FinalResults | GameOver | Quit | PlayAgain
     deriving (Show)
 
-data PureState = StartGame | InitialDeal | CheckBlackjacks | PlayerHit | PlayerStay | DealerMove
-               | CheckPlayerHit | PlayerWins
-               | CheckDealerHit | DealerWins
+data PureState = StartGame | InitialDeal | CheckBlackjacks | DealerMove
+               | PlayerHit | PlayerStay | CheckPlayerHit | PlayerWins
+               | DealerHit | DealerStay | CheckDealerHit | DealerWins
                | FindWinner | Tie | PlayerQuit
     deriving (Show)
 
@@ -125,10 +126,10 @@ handleState CheckBlackjacks game
 
 handleState PlayerHit game = handleState CheckPlayerHit game'
   where
-    (c:rest) = deck game
+    (d', p') = dealCard (deck game) (player game)
     game' = game
-        { player=modHand (player game) (c:)
-        , deck=rest
+        { player=p'
+        , deck=d'
         }
 
 handleState PlayerStay game = handleState DealerMove game
@@ -138,14 +139,18 @@ handleState CheckPlayerHit game
     | otherwise = (GetMove, game)
 
 handleState DealerMove game
-    | (playerPoints . dealer $ game) < dealerHitMax = handleState CheckDealerHit game'
-    | otherwise = handleState FindWinner game
+    | (playerPoints . dealer $ game) < dealerHitMax = handleState DealerHit game
+    | otherwise = handleState DealerStay game
+
+handleState DealerHit game = handleState CheckDealerHit game'
   where
-    (c:rest) = deck game
+    (d', p') = dealCard (deck game) (dealer game)
     game' = game
-        { dealer=modHand (dealer game) (c:)
-        , deck=rest
+        { dealer=p'
+        , deck=d'
         }
+
+handleState DealerStay game = handleState FindWinner game
 
 handleState CheckDealerHit game
     | busts . dealer $ game = (DealerBusts, snd . handleState PlayerWins $ game)

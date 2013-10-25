@@ -1,5 +1,6 @@
 module Cards where
 
+import Data.Maybe (fromJust, fromMaybe)
 import Control.Applicative ((<$>), (<*>))
 import Data.List (intercalate, sort)
 import Data.Set (Set)
@@ -48,7 +49,9 @@ possiblePoints cs =
 bestPoints :: Set Points -> Points
 bestPoints set
     | Set.null set = 0
-    | otherwise = head $ (Set.toDescList good) ++ (Set.toAscList bust)
+    | otherwise = head $ good' ++ bad'
   where
-    (good, bust) = Set.partition (<= 21) set
+    (good, bad) = Set.partition (<= 21) set
+    good' = take 1 . reverse . Set.toAscList $ good
+    bad' = take 1 . Set.toAscList $ bad
 

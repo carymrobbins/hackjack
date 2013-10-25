@@ -2,7 +2,7 @@ module Game where
 
 import Deck (Deck(..), newDeck)
 import Players (CardPlayer(..), Dealer(..), Player(..),
-                newDealer, newPlayer, modCash)
+                newDealer, newPlayer, modCash, modHand)
 
 type Bet = Int
 
@@ -36,4 +36,10 @@ hideDealerCard game = game
 updateCashFromBet :: Game -> (Int -> Int -> Int) -> Game
 updateCashFromBet game op =
     game { player=modCash (player game) (flip op . bet $ game) }
+
+dealCard :: Deck -> CardPlayer a -> (Deck, CardPlayer a)
+dealCard d p = (d', p')
+  where
+    (c:d') = d
+    p' = modHand p (c:)
 
