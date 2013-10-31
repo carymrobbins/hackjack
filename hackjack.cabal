@@ -8,7 +8,8 @@ executable hackjack
   hs-source-dirs:   src
   build-depends:    base >= 4,
                     containers,
-                    random-shuffle
+                    random-shuffle,
+                    lens
   ghc-options:      -Wall
   main-is:          Main.hs
 

@@ -2,6 +2,7 @@ module Cards where
 
 import Data.Maybe (fromJust, fromMaybe)
 import Control.Applicative ((<$>), (<*>))
+import Control.Lens (makeLenses)
 import Data.List (intercalate, sort)
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -16,10 +17,12 @@ data Suit = Clubs | Diamonds | Hearts | Spades
     deriving (Show, Eq, Enum)
 
 data Card = Card
-    { rank :: Rank
-    , suit :: Suit
+    { _rank :: Rank
+    , _suit :: Suit
     }
     deriving (Show, Eq)
+
+makeLenses ''Card
 
 type Hand = [Card]
 
@@ -44,7 +47,7 @@ possiblePoints :: [Card] -> Set Points
 possiblePoints [] = Set.singleton 0
 possiblePoints cs =
     Set.fromList . map sum . sequence $
-        map (Set.toList . rankPoints . rank) cs
+        map (Set.toList . rankPoints . _rank) cs
 
 bestPoints :: Set Points -> Points
 bestPoints set

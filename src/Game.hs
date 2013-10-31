@@ -1,5 +1,6 @@
 module Game where
 
+import Control.Lens (makeLenses)
 import Deck (Deck(..), newDeck)
 import Players (CardPlayer(..), Dealer(..), Player(..),
                 newDealer, newPlayer, modCash, modHand)
@@ -7,35 +8,37 @@ import Players (CardPlayer(..), Dealer(..), Player(..),
 type Bet = Int
 
 data Game = Game
-    { dealer :: CardPlayer Dealer
-    , player :: CardPlayer Player
-    , deck :: Deck
-    , bet :: Bet
+    { _dealer :: CardPlayer Dealer
+    , _player :: CardPlayer Player
+    , _deck :: Deck
+    , _bet :: Bet
     }
     deriving (Show)
 
+makeLenses ''Game
+
 baseGame :: Game
 baseGame = Game
-    { dealer=newDealer
-    , player=newPlayer
-    , deck=[]
-    , bet=0
+    { _dealer=newDealer
+    , _player=newPlayer
+    , _deck=[]
+    , _bet=0
     }
 
 newGame :: IO Game
 newGame = do
     d <- newDeck
-    return baseGame { deck=d }
+    return baseGame { _deck=d }
 
 hideDealerCard :: Game -> Game
 hideDealerCard game = game
-    { dealer=(dealer game)
-        { hand=take 1 . hand . dealer $ game }
+    { _dealer=(_dealer game)
+        { _hand=take 1 . _hand . _dealer $ game }
     }
 
 updateCashFromBet :: Game -> (Int -> Int -> Int) -> Game
 updateCashFromBet game op =
-    game { player=modCash (player game) (flip op . bet $ game) }
+    game { _player=modCash (_player game) (flip op . _bet $ game) }
 
 dealCard :: Deck -> CardPlayer a -> (Deck, CardPlayer a)
 dealCard d p = (d', p')
