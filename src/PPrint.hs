@@ -1,10 +1,11 @@
 module PPrint where
 
+import Control.Lens
 import Data.List (intersperse)
 import qualified Data.Set as Set
 import Cards (Card(..), Rank(..), Suit(..), rankPoints, handPoints)
 import Game (Game(..))
-import Players (Player(..), Dealer(..), CardPlayer(..))
+import Players 
 
 class PPrint a where
     pprint :: a -> String
@@ -34,9 +35,9 @@ instance PPrint Player where
 instance (PPrint a) => PPrint (CardPlayer a)  where
     pprint p = name ++ "\t(" ++ showing ++ ")\t" ++ cs
       where
-        name = pprint . cardPlayer $ p
-        cs = pprint . hand $ p
-        showing = show . handPoints . hand $ p
+        name = pprint $ p^.cardPlayer
+        cs = pprint $ p^.hand
+        showing = show . handPoints $ p^.hand
 
 instance PPrint Game where
     pprint game = unlines
