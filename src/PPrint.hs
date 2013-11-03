@@ -3,8 +3,8 @@ module PPrint where
 import Control.Lens
 import Data.List (intersperse)
 import qualified Data.Set as Set
-import Cards (Card(..), Rank(..), Suit(..), rankPoints, handPoints)
-import Game (Game(..))
+import Cards
+import Game
 import Players 
 
 class PPrint a where
@@ -21,7 +21,7 @@ instance PPrint Rank where
              | otherwise = show . Set.findMax . rankPoints $ r
 
 instance PPrint Card where
-    pprint (Card r s) = concat [pprint r, pprint s]
+    pprint c = concat [c^.rank.to pprint, c^.suit.to pprint]
 
 instance (PPrint a) => PPrint ([] a) where
     pprint = concat . intersperse " " . map pprint
@@ -41,9 +41,9 @@ instance (PPrint a) => PPrint (CardPlayer a)  where
 
 instance PPrint Game where
     pprint game = unlines
-        [ "Cash $" ++ (show . cash . cardPlayer . player $ game)
-        , "Bet $" ++ (show . bet $ game)
-        , pprint . dealer $ game
-        , pprint . player $ game
+        [ "Cash $" ++ (game^.player.cardPlayer.cash.to show)
+        , "Bet $" ++ (game^.bet.to show)
+        , pprint $ game^.dealer
+        , pprint $ game^.player
         ]
 

@@ -1,14 +1,13 @@
 module State where
 
+import Control.Lens
 import Data.Char (toLower)
-import Cards (handPoints)
-import Deck (newDeck, shouldReshuffle)
-import Game (Game(..), Bet, hideDealerCard, newGame, updateCashFromBet,
-             dealCard)
-import Helpers (clearScreen, maybeRead, prompt, waitForEnter)
-import Players (Player(..), CardPlayer(..), modCash, modHand, setHand,
-                hasBlackjack, busts, dealerHitMax, playerPoints)
-import PPrint (pprint)
+import Cards
+import Deck
+import Game
+import Helpers
+import Players
+import PPrint
 
 data IOState = NewGame | Reshuffle | GetBet | GetMove | ShowDealerHit
              | PlayerBlackjack | PlayerBusts | ShowPlayerWins
@@ -39,7 +38,7 @@ handleIO Reshuffle game = do
 
 handleIO GetBet game = do
     clearScreen
-    putStrLn $ "Cash $" ++ (show . cash . cardPlayer . player $ game)
+    putStrLn $ "Cash $" ++ (game^.player.cardPlayer.cash.to show)
     getBet game
 
 handleIO GetMove game = do
@@ -102,76 +101,79 @@ handleIO GameOver game = do
 handleState :: PureState -> Game -> (IOState, Game)
 
 handleState StartGame game
-    | (cash . cardPlayer . player $ game) == 0 = (GameOver, game)
-    | shouldReshuffle $ deck game = (Reshuffle, game)
+    | (game^.player.cardPlayer.cash) == 0 = (GameOver, game)
+    | shouldReshuffle $ game^.deck = (Reshuffle, game)
     | otherwise = (GetBet, game)
 
 handleState InitialDeal game = handleState CheckBlackjacks game'
   where
-    ([c1, c2, c3, c4], rest) = splitAt 4 . deck $ game
-    player' = modCash (player game) (subtract . bet $ game)
+    ([c1, c2, c3, c4], rest) = game^.deck.to (splitAt 4)
+    player' = modCash (game^.player) (game^.bet.to subtract)
     game' = game
-        { player=setHand player' [c1, c3]
-        , dealer=setHand (dealer game) [c2, c4]
-        , deck=rest
+        { _player=setHand player' [c1, c3]
+        , _dealer=setHand (game^.dealer) [c2, c4]
+        , _deck=rest
         }
 
 handleState CheckBlackjacks game
-    | hasBlackjack (player game) && hasBlackjack (dealer game) = handleState Tie game
-    | hasBlackjack $ player game = let (_, game') = handleState PlayerWins game
-                                   in (PlayerBlackjack, game')
-    | hasBlackjack $ dealer game = let (_, game') = handleState DealerWins game
-                                   in (DealerBlackjack, game')
+    | hasBlackjack (game^.player) && hasBlackjack (game^.dealer) =
+        handleState Tie game
+    | hasBlackjack $ game^.player =
+        let (_, game') = handleState PlayerWins game
+        in (PlayerBlackjack, game')
+    | hasBlackjack $ game^.dealer =
+        let (_, game') = handleState DealerWins game
+        in (DealerBlackjack, game')
     | otherwise = (GetMove, game)
 
 handleState PlayerHit game = handleState CheckPlayerHit game'
   where
-    (d', p') = dealCard (deck game) (player game)
+    (d', p') = dealCard (game^.deck) (game^.player)
     game' = game
-        { player=p'
-        , deck=d'
+        { _player=p'
+        , _deck=d'
         }
 
 handleState PlayerStay game = handleState DealerMove game
 
 handleState CheckPlayerHit game
-    | busts $ player game = (PlayerBusts, game)
+    | busts $ game^.player = (PlayerBusts, game)
     | otherwise = (GetMove, game)
 
 handleState DealerMove game
-    | (playerPoints . dealer $ game) < dealerHitMax = handleState DealerHit game
+    | (playerPoints . _dealer $ game) < dealerHitMax = handleState DealerHit game
     | otherwise = handleState DealerStay game
 
 handleState DealerHit game = handleState CheckDealerHit game'
   where
-    (d', p') = dealCard (deck game) (dealer game)
+    (d', p') = dealCard (_deck game) (_dealer game)
     game' = game
-        { dealer=p'
-        , deck=d'
+        { _dealer=p'
+        , _deck=d'
         }
 
 handleState DealerStay game = handleState FindWinner game
 
 handleState CheckDealerHit game
-    | busts . dealer $ game = (DealerBusts, snd . handleState PlayerWins $ game)
+    | busts . _dealer $ game = (DealerBusts, snd . handleState PlayerWins $ game)
     | otherwise = (ShowDealerHit, game) 
 
 handleState FindWinner game
-    | playerPoints (dealer game) > playerPoints (player game) = handleState DealerWins game
-    | playerPoints (dealer game) < playerPoints (player game) = handleState PlayerWins game
+    | playerPoints (_dealer game) > playerPoints (_player game) = handleState DealerWins game
+    | playerPoints (_dealer game) < playerPoints (_player game) = handleState PlayerWins game
     | otherwise = handleState Tie game
 
 handleState PlayerWins game = (ShowPlayerWins, game')
   where
     game' = game
-        { player=modCash (player game) (+ bet game * 2) }
+        { _player=modCash (_player game) (+ _bet game * 2) }
 
 handleState DealerWins game = (ShowDealerWins, game)
 
 handleState Tie game = (ShowTie, game')
   where
     game' = game
-        { player=modCash (player game) (+ bet game) }
+        { _player=modCash (_player game) (+ _bet game) }
 
 handleState PlayerQuit game = (Quit, game)
 
@@ -186,10 +188,10 @@ handleBetResponse (Just b) game
     | b <= 0 || b `mod` 10 /= 0 = do
         putStrLn "Bet must be a multiple of 10."
         getBet game
-    | b > (cash . cardPlayer . player) game = do
+    | b > (game^.player.cardPlayer.cash) = do
         putStrLn "You cannot bet more than you have!"
         getBet game
-    | otherwise = return (InitialDeal, game { bet=b })
+    | otherwise = return (InitialDeal, game { _bet=b })
 
 getMove :: Game -> IO (PureState, Game)
 getMove game = do
