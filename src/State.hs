@@ -101,19 +101,18 @@ handleIO GameOver game = do
 handleState :: PureState -> Game -> (IOState, Game)
 
 handleState StartGame game
-    | (game^.player.cardPlayer.cash) == 0 = (GameOver, game)
-    | shouldReshuffle $ game^.deck = (Reshuffle, game)
+    | game^.player.cardPlayer.cash.to (== 0) = (GameOver, game)
+    | game^.deck.to shouldReshuffle = (Reshuffle, game)
     | otherwise = (GetBet, game)
 
 handleState InitialDeal game = handleState CheckBlackjacks game'
   where
     ([c1, c2, c3, c4], rest) = game^.deck.to (splitAt 4)
-    player' = modCash (game^.player) (game^.bet.to subtract)
     game' = game
-        { _player=setHand player' [c1, c3]
-        , _dealer=setHand (game^.dealer) [c2, c4]
-        , _deck=rest
-        }
+        & (player.cardPlayer.cash) -~ (game^.bet)
+        & (player.hand) .~ [c1, c3]
+        & (dealer.hand) .~ [c2, c4]
+        & deck .~ rest
 
 handleState CheckBlackjacks game
     | hasBlackjack (game^.player) && hasBlackjack (game^.dealer) =
