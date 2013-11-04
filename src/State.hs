@@ -38,7 +38,7 @@ handleIO Reshuffle game = do
 
 handleIO GetBet game = do
     clearScreen
-    putStrLn $ "Cash $" ++ (game^.player.cardPlayer.cash.to show)
+    putStrLn $ "Cash $" ++ (game^.player.cash.to show)
     getBet game
 
 handleIO GetMove game = do
@@ -101,7 +101,7 @@ handleIO GameOver game = do
 handleState :: PureState -> Game -> (IOState, Game)
 
 handleState StartGame game
-    | game^.player.cardPlayer.cash.to (== 0) = (GameOver, game)
+    | game^.player.cash.to (== 0) = (GameOver, game)
     | game^.deck.to shouldReshuffle = (Reshuffle, game)
     | otherwise = (GetBet, game)
 
@@ -109,7 +109,7 @@ handleState InitialDeal game = handleState CheckBlackjacks game'
   where
     ([c1, c2, c3, c4], rest) = game^.deck.to (splitAt 4)
     game' = game
-        & (player.cardPlayer.cash) -~ (game^.bet)
+        & (player.cash) -~ (game^.bet)
         & (player.hand) .~ [c1, c3]
         & (dealer.hand) .~ [c2, c4]
         & deck .~ rest
@@ -152,13 +152,13 @@ handleState FindWinner game
 
 handleState PlayerWins game = (ShowPlayerWins, game')
   where
-    game' = game & (player.cardPlayer.cash) +~ (game^.bet * 2)
+    game' = game & (player.cash) +~ (game^.bet * 2)
 
 handleState DealerWins game = (ShowDealerWins, game)
 
 handleState Tie game = (ShowTie, game')
   where
-    game' = game & (player.cardPlayer.cash) +~ (game^.bet)
+    game' = game & (player.cash) +~ (game^.bet)
 
 handleState PlayerQuit game = (Quit, game)
 
@@ -173,7 +173,7 @@ handleBetResponse (Just b) game
     | b <= 0 || b `mod` 10 /= 0 = do
         putStrLn "Bet must be a multiple of 10."
         getBet game
-    | b > (game^.player.cardPlayer.cash) = do
+    | b > (game^.player.cash) = do
         putStrLn "You cannot bet more than you have!"
         getBet game
     | otherwise = return (InitialDeal, game & bet .~ b)

@@ -1,50 +1,49 @@
 module Players where
 
-import Control.Lens (makeLenses)
+import Control.Lens
 import Cards (Hand(..), Points, handPoints)
 
 type Cash = Int
 
-data Dealer = Dealer
-    deriving (Show)
-
-data Player = Player { _cash :: Cash }
-    deriving (Show)
-
-makeLenses ''Player
-
-data CardPlayer a = CardPlayer
-    { _cardPlayer :: a
-    , _hand :: Hand
-    }
-    deriving (Show)
-
-makeLenses ''CardPlayer
+data Dealer = Dealer Hand deriving (Show)
+data Player = Player Hand Cash deriving (Show)
 
 dealerHitMax :: Points
 dealerHitMax = 17
 
-newDealer :: CardPlayer Dealer
-newDealer = CardPlayer
-    { _cardPlayer=Dealer
-    , _hand=[]
-    }
+newDealer :: Dealer
+newDealer = Dealer []
 
-newPlayer :: CardPlayer Player
-newPlayer = CardPlayer
-    { _cardPlayer=Player { _cash=100 }
-    , _hand=[]
-    }
+newPlayer :: Player
+newPlayer = Player [] 100
 
-playerPoints :: CardPlayer a -> Int
-playerPoints = handPoints . _hand
-
-hasBlackjack :: CardPlayer a -> Bool
-hasBlackjack p = has21Points && has2Cards
+cash :: Lens' Player Cash
+cash = lens getCash setCash
   where
-    has21Points = (== 21) . handPoints . _hand $ p
-    has2Cards = (== 2) . length . _hand $ p
+    getCash (Player _ c) = c
+    setCash (Player h _) c = Player h c
 
-busts :: CardPlayer a -> Bool
-busts = (> 21) . handPoints . _hand
+class CardPlayer a where
+    getHand :: a -> Hand
+    setHand :: a -> Hand -> a
+
+    hand :: Lens' a Hand
+    hand = lens getHand setHand
+
+    playerPoints :: a -> Int
+    playerPoints p = p^.hand.to handPoints
+
+    hasBlackjack :: a -> Bool
+    hasBlackjack p = playerPoints p == 21 && p^.hand.to length == 2
+
+    busts :: a -> Bool
+    busts p = playerPoints p > 21
+
+instance CardPlayer Dealer where
+    getHand (Dealer h) = h
+    setHand _ h = Dealer h
+
+instance CardPlayer Player where
+    getHand (Player h _) = h
+    setHand (Player _ c) h = Player h c
 

@@ -1,4 +1,4 @@
-module PPrint where
+module PPrint (pprint) where
 
 import Control.Lens
 import Data.List (intersperse)
@@ -28,22 +28,21 @@ instance PPrint Card where
 instance (PPrint a) => PPrint ([] a) where
     pprint = concat . intersperse " " . map pprint
 
+pprintCardPlayer :: CardPlayer a => String -> a -> String
+pprintCardPlayer name p = name ++ "\t(" ++ showing ++ ")\t" ++ cs
+  where
+    cs = p^.hand.to pprint
+    showing = p^.hand.to (show . handPoints)
+
 instance PPrint Dealer where
-    pprint = show
+    pprint = pprintCardPlayer "Dealer"
 
 instance PPrint Player where
-    pprint _ = "You"
-
-instance (PPrint a) => PPrint (CardPlayer a)  where
-    pprint p = name ++ "\t(" ++ showing ++ ")\t" ++ cs
-      where
-        name = p^.cardPlayer.to pprint
-        cs = p^.hand.to pprint
-        showing = p^.hand.to (show . handPoints)
+    pprint = pprintCardPlayer "You"
 
 instance PPrint Game where
     pprint game = unlines
-        [ "Cash $" ++ (game^.player.cardPlayer.cash.to show)
+        [ "Cash $" ++ (game^.player.cash.to show)
         , "Bet $" ++ (game^.bet.to show)
         , game^.dealer.to pprint
         , game^.player.to pprint

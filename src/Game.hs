@@ -7,8 +7,8 @@ import Players
 type Bet = Int
 
 data Game = Game
-    { _dealer :: CardPlayer Dealer
-    , _player :: CardPlayer Player
+    { _dealer :: Dealer
+    , _player :: Player
     , _deck :: Deck
     , _bet :: Bet
     }
