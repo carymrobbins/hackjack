@@ -17,8 +17,10 @@ instance PPrint Suit where
     pprint Clubs = "♣"
 
 instance PPrint Rank where
-    pprint r | (Set.findMax . rankPoints $ r) > 9 = [head . show $ r]
-             | otherwise = show . Set.findMax . rankPoints $ r
+    pprint Ten = "10"
+    pprint r | points > 9 = [head . show $ r]
+             | otherwise = show points
+      where points = Set.findMax . rankPoints $ r
 
 instance PPrint Card where
     pprint c = concat [c^.rank.to pprint, c^.suit.to pprint]
@@ -35,15 +37,15 @@ instance PPrint Player where
 instance (PPrint a) => PPrint (CardPlayer a)  where
     pprint p = name ++ "\t(" ++ showing ++ ")\t" ++ cs
       where
-        name = pprint $ p^.cardPlayer
-        cs = pprint $ p^.hand
-        showing = show . handPoints $ p^.hand
+        name = p^.cardPlayer.to pprint
+        cs = p^.hand.to pprint
+        showing = p^.hand.to (show . handPoints)
 
 instance PPrint Game where
     pprint game = unlines
         [ "Cash $" ++ (game^.player.cardPlayer.cash.to show)
         , "Bet $" ++ (game^.bet.to show)
-        , pprint $ game^.dealer
-        , pprint $ game^.player
+        , game^.dealer.to pprint
+        , game^.player.to pprint
         ]
 

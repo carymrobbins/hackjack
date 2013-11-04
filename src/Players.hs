@@ -48,15 +48,3 @@ hasBlackjack p = has21Points && has2Cards
 busts :: CardPlayer a -> Bool
 busts = (> 21) . handPoints . _hand
 
-setHand :: CardPlayer a -> Hand -> CardPlayer a
-setHand p h = p { _hand=h }
-
-modHand :: CardPlayer a -> (Hand -> Hand) -> CardPlayer a
-modHand p f = setHand p . f . _hand $ p
-
-setCash :: CardPlayer Player -> Cash -> CardPlayer Player
-setCash p c = p { _cardPlayer=Player { _cash=c } }
-
-modCash :: CardPlayer Player -> (Cash -> Cash) -> CardPlayer Player
-modCash p f = setCash p . f . _cash . _cardPlayer $ p
-

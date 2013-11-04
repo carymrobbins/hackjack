@@ -32,13 +32,7 @@ newGame = do
 hideDealerCard :: Game -> Game
 hideDealerCard game = game & (dealer.hand) %~ (take 1)
 
-dealCard :: Deck -> CardPlayer a -> (Deck, CardPlayer a)
-dealCard d p = (d', p')
-  where
-    (c:d') = d
-    p' = modHand p (c:)
-
-dealCard' game playerLens = game
+dealCard game playerLens = game
     & (playerLens.hand) %~ (c:)
     & deck .~ cs
   where

@@ -125,13 +125,7 @@ handleState CheckBlackjacks game
         in (DealerBlackjack, game')
     | otherwise = (GetMove, game)
 
-handleState PlayerHit game = handleState CheckPlayerHit game'
-  where
-    (d', p') = dealCard (game^.deck) (game^.player)
-    game' = game
-        { _player=p'
-        , _deck=d'
-        }
+handleState PlayerHit game = handleState CheckPlayerHit $ dealCard game player
 
 handleState PlayerStay game = handleState DealerMove game
 
@@ -143,13 +137,7 @@ handleState DealerMove game
     | (playerPoints . _dealer $ game) < dealerHitMax = handleState DealerHit game
     | otherwise = handleState DealerStay game
 
-handleState DealerHit game = handleState CheckDealerHit game'
-  where
-    (d', p') = dealCard (_deck game) (_dealer game)
-    game' = game
-        { _dealer=p'
-        , _deck=d'
-        }
+handleState DealerHit game = handleState CheckDealerHit $ dealCard game dealer
 
 handleState DealerStay game = handleState FindWinner game
 
@@ -164,15 +152,13 @@ handleState FindWinner game
 
 handleState PlayerWins game = (ShowPlayerWins, game')
   where
-    game' = game
-        { _player=modCash (_player game) (+ _bet game * 2) }
+    game' = game & (player.cardPlayer.cash) +~ (game^.bet * 2)
 
 handleState DealerWins game = (ShowDealerWins, game)
 
 handleState Tie game = (ShowTie, game')
   where
-    game' = game
-        { _player=modCash (_player game) (+ _bet game) }
+    game' = game & (player.cardPlayer.cash) +~ (game^.bet)
 
 handleState PlayerQuit game = (Quit, game)
 
@@ -190,7 +176,7 @@ handleBetResponse (Just b) game
     | b > (game^.player.cardPlayer.cash) = do
         putStrLn "You cannot bet more than you have!"
         getBet game
-    | otherwise = return (InitialDeal, game { _bet=b })
+    | otherwise = return (InitialDeal, game & bet .~ b)
 
 getMove :: Game -> IO (PureState, Game)
 getMove game = do
@@ -198,9 +184,10 @@ getMove game = do
     handleMoveResponse (map toLower response) game
 
 handleMoveResponse :: String -> Game -> IO (PureState, Game)
-handleMoveResponse "hit" game = return (PlayerHit, game)
-handleMoveResponse "stay" game = return (PlayerStay, game)
-handleMoveResponse _ game = putStrLn "Invalid move." >> getMove game
+handleMoveResponse response game
+    | response `elem` ["hit", "h"] = return (PlayerHit, game)
+    | response `elem` ["stay", "s"] = return (PlayerStay, game)
+    | otherwise = putStrLn "Invalid move." >> getMove game
 
 getPlayAgain :: Game -> IO (PureState, Game)
 getPlayAgain game = do
