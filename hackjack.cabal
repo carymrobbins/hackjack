@@ -12,4 +12,5 @@ executable hackjack
                     lens
   ghc-options:      -Wall
   main-is:          Main.hs
+  extensions:       TemplateHaskell
 
